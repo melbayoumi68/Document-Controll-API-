@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DC.API/DC.API.csproj" />
+  <Project Path="DC.BLL/DC.BLL.csproj" />
+  <Project Path="DC.DAL/DC.DAL.csproj" />
+</Solution>
