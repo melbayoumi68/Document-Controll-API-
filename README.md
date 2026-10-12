@@ -1,92 +1,87 @@
-# Document Control System — Backend API
+# Document Control System
 
-ASP.NET Core 9 Web API for **Technical Office Document Control**.  
-Manage engineering project documents end-to-end: projects, contracts, submissions, revisions, consultant reviews, notifications, and audit trails.
+Full-stack **Technical Office Document Control** platform for engineering and construction projects.
+
+Manage projects, contracts, document submissions, revisions, consultant reviews, notifications, and audit trails — with a role-based web UI and a clean ASP.NET Core API.
+
+---
+
+## Repository layout
+
+```
+Document-Controll-API-/
+├── DC.API/                 # ASP.NET Core 9 Web API (presentation)
+├── DC.BLL/                 # Business logic, services, DTOs
+├── DC.DAL/                 # Entities, EF Core, migrations, seeder
+├── DC.API.slnx             # .NET solution
+├── frontend/               # React + TypeScript + Vite SPA
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── .env.example
+└── README.md
+```
+
+| Layer | Stack |
+|-------|--------|
+| **Backend** | .NET 9 · ASP.NET Core Web API · EF Core · SQL Server · JWT · MailKit |
+| **Frontend** | React 19 · TypeScript · Vite · Tailwind CSS · TanStack Query · Zustand · React Router |
 
 ---
 
 ## Why this project exists
 
-In construction and engineering offices, document control is critical:
+In construction and engineering offices, document control is often chaotic:
 
-- Drawings, inspection requests, method statements, and reports must be submitted in order  
-- Every revision must be tracked  
-- Consultants must review and rate documents (approve / revise / reject)  
-- Engineers need a clear workflow instead of email chaos  
-- Management needs auditability and accountability  
+- Drawings, IR, method statements, and reports move through email threads  
+- Revisions get lost or duplicated  
+- Consultants lack a clear review queue  
+- Managers have weak auditability  
 
-This API was built to replace fragmented email-based document exchange with a **structured, role-based, auditable backend** that a frontend (web or mobile) can consume.
+This system replaces that with a **structured, role-based, auditable workflow** shared by Super Admins, Technical Office Engineers, and Consultants.
 
-### What was implemented
+---
 
-| Area | What you get |
-|------|----------------|
-| **Architecture** | Clean three-tier: `DC.API` → `DC.BLL` → `DC.DAL` |
-| **Auth** | JWT login, lockout after failed attempts, role-based authorization |
+## Features
+
+### Backend
+| Area | Capability |
+|------|------------|
+| **Architecture** | Three-tier: `DC.API` → `DC.BLL` → `DC.DAL` |
+| **Auth** | JWT login, lockout, role-based authorization |
 | **Organization** | Departments, projects, contracts, contractors |
-| **Assignments** | Assign Technical Office Engineers and Consultants to contracts |
-| **Documents** | Submit documents with files, auto-numbering, multi-version support |
-| **Reviews** | Consultant ratings A / B / C / D with status transitions |
-| **Notifications** | In-app notifications + email (MailKit / SMTP) |
-| **Audit** | Action logs for security and compliance |
-| **Coding rules** | Configurable document number parts and order (Super Admin) |
+| **Assignments** | Assign engineers & consultants to contracts |
+| **Documents** | Submit + file upload, multi-version, auto-numbering |
+| **Reviews** | Consultant ratings **A / B / C / D** with status transitions |
+| **Notifications** | In-app + email (MailKit / SMTP) |
+| **Audit** | Action logs for compliance |
+| **Coding rules** | Configurable document number parts (Super Admin) |
 
----
-
-## Solution structure
-
-```
-backend/
-├── DC.API.slnx                 # Solution file
-├── DC.API/                     # Presentation layer
-│   ├── Controllers/            # HTTP endpoints
-│   ├── Program.cs              # DI, JWT, middleware, migrate + seed
-│   └── appsettings.json
-├── DC.BLL/                     # Business layer
-│   ├── Services/               # Business logic
-│   ├── Interfaces/             # Service contracts
-│   ├── Dtos/                   # Request/response models
-│   └── Security/               # CurrentUser helpers (claims)
-└── DC.DAL/                     # Data layer
-    ├── Models/                 # Entities
-    ├── Data/                   # AppDbContext, DbSeeder
-    ├── Configurations/         # EF Fluent API
-    └── Migrations/             # EF Core migrations
-```
-
-**Dependency flow:** Controllers → Services → `AppDbContext` → SQL Server  
-
-Services contain business rules. Controllers handle HTTP only. The DAL owns entities, EF configuration, and migrations.
-
----
-
-## Tech stack
-
-| Technology | Version / notes |
-|------------|-----------------|
-| .NET | 9.0 |
-| ASP.NET Core Web API | Controllers + minimal hosting |
-| Entity Framework Core | 9.x + SQL Server provider |
-| Authentication | JWT Bearer |
-| Email | MailKit (SMTP) |
-| API docs | OpenAPI + Swagger UI (Development) |
-| Database | Microsoft SQL Server |
+### Frontend
+| Area | Capability |
+|------|------------|
+| **UI** | Modern SPA with Tailwind CSS and Framer Motion |
+| **Auth** | Login, protected routes, JWT stored securely |
+| **State** | Zustand + TanStack Query for server state |
+| **Forms** | React Hook Form + Zod validation |
+| **Uploads** | Drag-and-drop document upload (react-dropzone) |
+| **UX** | Toasts (Sonner), virtualized lists, responsive layout |
 
 ---
 
 ## Roles
 
-| Role | Constant | Typical permissions |
-|------|----------|---------------------|
-| **Super Admin** | `SUPER_ADMIN` | Full system access, master data, users, coding order |
-| **Technical Office Engineer** | `Technical ENGINEER` | Submit documents, upload revisions, view assigned contracts |
+| Role | Constant | Typical access |
+|------|----------|----------------|
+| **Super Admin** | `SUPER_ADMIN` | Full system, users, master data, coding order |
+| **Technical Office Engineer** | `Technical ENGINEER` | Submit documents, revisions, assigned contracts |
 | **Consultant** | `CONSULTANT` | Review pending documents on assigned contracts |
 
 ---
 
 ## Default seed credentials (Development only)
 
-When the API runs in **Development**, it applies migrations and seeds sample data.
+When the API runs in **Development**, it migrates the database and seeds sample data.
 
 | Field | Value |
 |-------|--------|
@@ -95,17 +90,16 @@ When the API runs in **Development**, it applies migrations and seeds sample dat
 | **Role** | Super Admin |
 | **Email** | `admin1@dc.com` |
 
-Other seeded accounts (same password `password123` unless overridden):
+Other seeded accounts (same password unless overridden):
 
-| Username pattern | Role |
-|------------------|------|
+| Username | Role |
+|----------|------|
 | `admin1` … `admin3` | Super Admin |
 | `eng01` … `eng12` | Technical Office Engineer |
 | `cons01` … `cons10` | Consultant |
 
-Override the seed password with environment variable:
-
 ```bash
+# Optional: override seed password
 # Windows PowerShell
 $env:DC_SEED_PASSWORD = "YourStrongPassword"
 
@@ -113,30 +107,31 @@ $env:DC_SEED_PASSWORD = "YourStrongPassword"
 export DC_SEED_PASSWORD="YourStrongPassword"
 ```
 
-> **Security note:** Seed users and default passwords are for local development only. Do not use them in production. Change JWT keys, SMTP secrets, and connection strings before any real deployment.
+> **Security:** Seed users are for local development only. Never use them in production. Rotate JWT keys, SMTP secrets, and connection strings before any real deployment.
+
+---
+
+## Prerequisites
+
+- [.NET 9 SDK](https://dotnet.microsoft.com/download)
+- SQL Server (LocalDB, Express, or full instance)
+- [Node.js 20+](https://nodejs.org/) (for the frontend)
+- Optional: SMTP credentials for real email tests
 
 ---
 
 ## Getting started
 
-### Prerequisites
-
-- .NET 9 SDK  
-- SQL Server (LocalDB, Express, or full instance)  
-- Optional: SMTP credentials for real email tests  
-
-### 1. Clone and open
+### 1. Clone
 
 ```bash
-git clone <your-repo-url>
-cd backend
+git clone https://github.com/melbayoumi68/Document-Controll-API-.git
+cd Document-Controll-API-
 ```
 
-Open `DC.API.slnx` in Visual Studio 2022 / VS Code, or use the CLI.
+### 2. Backend
 
-### 2. Connection string
-
-Edit `DC.API/appsettings.json` (or User Secrets / environment variables):
+**Connection string** — edit `DC.API/appsettings.json` (or User Secrets):
 
 ```json
 {
@@ -146,14 +141,7 @@ Edit `DC.API/appsettings.json` (or User Secrets / environment variables):
 }
 ```
 
-Adjust `Server` for your machine (e.g. `localhost`, `localhost\\SQLEXPRESS`).
-
-### 3. JWT and email (Development)
-
-Configured under `Jwt`, `Security`, and `Email` sections in `appsettings.json`.  
-Prefer **User Secrets** or environment variables for secrets; do not commit production credentials.
-
-### 4. Run
+**Run the API:**
 
 ```bash
 dotnet restore
@@ -163,31 +151,72 @@ dotnet run --project DC.API
 
 On startup (Development):
 
-1. `Database.Migrate()` applies pending EF migrations  
-2. `DbSeeder` loads departments, types, sample projects/contracts/users if the DB is empty  
+1. EF migrations are applied  
+2. Sample departments, types, projects, contracts, and users are seeded if the DB is empty  
 
-### 5. Swagger
-
-In Development, open the Swagger UI path printed in the console (typically based on `launchSettings.json`), e.g.:
+Swagger UI (typical):
 
 ```text
 https://localhost:<port>/swagger
 ```
 
-Use **POST `/api/Auth/login`** with:
+Login via **POST `/api/Auth/login`**:
 
 ```json
 {
-  "usernameOrEmail": "admin",
+  "usernameOrEmail": "admin1",
   "password": "password123"
 }
 ```
 
-Copy the `accessToken` and authorize Swagger with:
+Authorize Swagger with: `Bearer <accessToken>`
+
+### 3. Frontend
+
+```bash
+cd frontend
+cp .env.example .env   # if needed
+npm install
+npm run dev
+```
+
+Vite defaults to a proxy toward the API (`/api` → backend, see `vite.config.ts`).  
+Point `VITE_API_BASE_URL` in `.env` if your API port differs:
+
+```env
+# Default: use Vite proxy
+VITE_API_BASE_URL=/api
+
+# Or call the API directly
+# VITE_API_BASE_URL=http://localhost:5187/api
+```
+
+Open the URL printed by Vite (usually `http://localhost:5173`).
+
+**Recommended order:** start the **backend first**, then the **frontend**.
+
+---
+
+## Document workflow
 
 ```text
-Bearer <accessToken>
+Engineer (assigned to contract)
+    │
+    ├─ Submit document + file  →  Status: PendingReview
+    │                              Version: 01
+    │                              Notifications + email
+    │
+Consultant (assigned to contract)
+    │
+    ├─ Rating A  →  Approved
+    ├─ Rating B  →  Approved with comments
+    ├─ Rating C  →  Requires revision  →  Engineer uploads new version
+    └─ Rating D  →  Rejected (new document required)
+
+Overdue open documents can be auto-rejected based on DueDate rules.
 ```
+
+Document numbers are built from configurable coding parts (project code, type, contractor, category, serial, revision) ordered by Super Admin settings.
 
 ---
 
@@ -198,82 +227,61 @@ Bearer <accessToken>
 | `Auth` | Login, change password |
 | `User` | User CRUD (admin) |
 | `Projects` | Project lifecycle |
-| `Contracts` | Contracts under projects; “my contracts” |
+| `Contracts` | Contracts; “my contracts” |
 | `ContractAssignments` | Assign/remove engineers & consultants |
 | `Contractors` | Contractor master data |
 | `Department` | Departments |
-| `DocumentType` / `DocumentCategory` | Classification master data |
-| `DocumentCodingOrder` | Order of document number parts |
-| `Document` | Submit, list, filter, update documents |
+| `DocumentType` / `DocumentCategory` | Classification |
+| `DocumentCodingOrder` | Number part order |
+| `Document` | Submit, list, filter, update |
 | `DocumentVersion` | Versions + file download |
-| `ConsultantReviews` | Submit ratings A–D |
+| `ConsultantReviews` | Ratings A–D |
 | `Notifications` | User notifications |
-| `AuditLogs` | Security / activity log (Super Admin) |
-
-Exact routes follow the `[Route]` attributes on each controller (e.g. `api/Document`, `api/Auth/login`).
+| `AuditLogs` | Activity log (Super Admin) |
 
 ---
 
-## Document workflow (high level)
+## Architecture notes
 
-```text
-Engineer (assigned to contract)
-    │
-    ├─ Submit document + file  →  Status: PendingReview
-    │                              Version: 01
-    │                              Email / notifications to stakeholders
-    │
-Consultant (assigned to contract)
-    │
-    ├─ Rating A  →  Approved
-    ├─ Rating B  →  Approved with comments
-    ├─ Rating C  →  Requires revision  →  Engineer uploads new version
-    └─ Rating D  →  Rejected (new document required, not a new version)
+### Backend (three-tier)
 
-Overdue open documents can be auto-rejected based on DueDate rules in the service layer.
-```
+- **DC.API** — HTTP, JWT, middleware, Swagger, migrate + seed  
+- **DC.BLL** — Validation, workflows, email templates, DTOs  
+- **DC.DAL** — Entities, Fluent configs, `AppDbContext`, migrations  
 
-Document numbers are built from configurable coding parts (project code, type abbreviation, contractor, category, serial, revision) ordered by Super Admin settings.
+Controllers stay thin; business rules live in services.
+
+### Frontend
+
+- React SPA talking to the API over REST + JWT  
+- Server state: TanStack Query  
+- Client/UI state: Zustand  
+- Routing: React Router with role-aware protected pages  
 
 ---
 
-## Architecture notes (three-tier)
+## Production checklist
 
-- **DC.API:** HTTP, JWT middleware, exception mapping, Swagger, startup migrate/seed  
-- **DC.BLL:** Validation, workflows, email templates, password helpers, DTOs  
-- **DC.DAL:** Entities, Fluent configurations, `AppDbContext`, migrations, seeder  
-
-This keeps controllers thin and business rules testable in the BLL without coupling them to HTTP details.
-
----
-
-## Configuration checklist before production
-
-- [ ] Strong unique `Jwt:Key` (32+ characters), Issuer, Audience  
-- [ ] SQL connection via secure configuration (not committed secrets)  
-- [ ] SMTP credentials via secrets store; disable email or use a real provider  
-- [ ] Replace plain-text / temporary password handling with production-grade hashing if not already enabled in your branch  
-- [ ] Restrict CORS to your real frontend origin  
-- [ ] Disable automatic seed of demo users outside Development  
+- [ ] Strong unique `Jwt:Key` (32+ chars), Issuer, Audience  
+- [ ] SQL connection via secrets (not committed)  
+- [ ] SMTP via secrets store  
+- [ ] CORS limited to your real frontend origin  
+- [ ] Disable demo seed outside Development  
 - [ ] Review file upload limits and allowed extensions  
+- [ ] Build frontend with production API URL (`VITE_API_BASE_URL`)  
+- [ ] HTTPS everywhere  
 
 ---
 
-## Project importance (summary)
+## Project value
 
 | Stakeholder | Benefit |
 |-------------|---------|
-| **Technical Office** | One place to submit and track documents and revisions |
-| **Consultants** | Clear queue queue with structured ratings |
+| **Technical Office** | One place to submit and track documents & revisions |
+| **Consultants** | Clear review queue with structured ratings |
 | **Project management** | Traceability: who submitted, who reviewed, when |
-| **IT / developers** | Standard .NET API, clear layers, Swagger for integration |
+| **Developers** | Clear full-stack structure, Swagger + modern React |
 | **Compliance** | Audit logs and role separation |
-
----
-
-## License / usage
-
-Private academic or internal project unless otherwise specified by the repository owner.
 
 ---
 
@@ -285,4 +293,12 @@ Password : password123
 Role     : SUPER_ADMIN
 ```
 
-After login, explore Projects → Contracts → Assignments → Documents → Reviews via Swagger or your frontend.
+1. Start the API  
+2. Start the frontend (`npm run dev` in `frontend/`)  
+3. Sign in and explore Projects → Contracts → Assignments → Documents → Reviews  
+
+---
+
+## License / usage
+
+Private academic or internal project unless otherwise specified by the repository owner.
